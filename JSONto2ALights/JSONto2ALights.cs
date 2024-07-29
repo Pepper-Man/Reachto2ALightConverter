@@ -69,11 +69,11 @@ namespace JSONto2ALights
                 Console.WriteLine("Tagfile opened");
 
                 // Output deserialized data
-                Console.WriteLine("Light Definitions:");
+                Console.WriteLine("--- LIGHT DEFINITIONS ---");
                 int i = 0;
                 foreach (var def in lightDataContainer.LightDefinitions)
                 {
-                    Console.WriteLine($"Light Definition {i}: Type: {def.Type}, Flags: {def.Flags}, Colour: [{string.Join(", ", def.Colour)}], Intensity: {def.Intensity}, AttenBounds: [{string.Join(", ", def.AttenBounds)}]");
+                    Console.WriteLine($"Light Definition {i}: \n\tType: {def.Type}, \n\tFlags: {def.Flags}, \n\tColour: [{string.Join(", ", def.Colour)}], \n\tIntensity: {def.Intensity}, \n\tAttenBounds: [{string.Join(", ", def.AttenBounds)}]\n");
                     ((TagFieldBlock)tagFile.SelectField("Block:generic light definitions")).AddElement();
 
                     // Set light definition type
@@ -95,11 +95,11 @@ namespace JSONto2ALights
                     i++;
                 }
 
-                Console.WriteLine("\nLight Instances:");
+                Console.WriteLine("\n--- LIGHT INSTANCES ---");
                 int j = 0;
                 foreach (var inst in lightDataContainer.LightInstances)
                 {
-                    Console.WriteLine($"Light Instance {j}: DefIndex: {inst.DefIndex}, Origin: [{string.Join(", ", inst.Origin)}], Forward: [{string.Join(", ", inst.Forward)}], Up: [{string.Join(", ", inst.Up)}]");
+                    Console.WriteLine($"Light Instance {j}: \n\tDefIndex: {inst.DefIndex}, \n\tOrigin: [{string.Join(", ", inst.Origin)}], \n\tForward: [{string.Join(", ", inst.Forward)}], \n\tUp: [{string.Join(", ", inst.Up)}]\n");
                     ((TagFieldBlock)tagFile.SelectField("Block:generic light instances")).AddElement();
 
                     // Set light definition index
@@ -130,6 +130,7 @@ namespace JSONto2ALights
                 tagFile.Save();
                 tagFile.Dispose();
                 ManagedBlamSystem.Stop();
+                Console.WriteLine("\nSuccessfully written tag data! Press enter to exit.\n");
                 Console.ReadLine();
             }
         }
