@@ -5,6 +5,8 @@ VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReachLightstoJSON", "LightConverter\ReachLightstoJSON.csproj", "{FFF7CA7C-EF55-4FBD-9C08-1B5F0715D735}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JSONto2ALights", "JSONto2ALights\JSONto2ALights.csproj", "{6A64FA78-7914-4890-81D4-0EFC0B41F4DE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{FFF7CA7C-EF55-4FBD-9C08-1B5F0715D735}.Debug|Any CPU.Build.0 = Debug|x64
 		{FFF7CA7C-EF55-4FBD-9C08-1B5F0715D735}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FFF7CA7C-EF55-4FBD-9C08-1B5F0715D735}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A64FA78-7914-4890-81D4-0EFC0B41F4DE}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{6A64FA78-7914-4890-81D4-0EFC0B41F4DE}.Debug|Any CPU.Build.0 = Debug|x64
+		{6A64FA78-7914-4890-81D4-0EFC0B41F4DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A64FA78-7914-4890-81D4-0EFC0B41F4DE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

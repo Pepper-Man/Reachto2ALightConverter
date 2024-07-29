@@ -10,7 +10,7 @@ namespace LightConverter
 {
     public class LightDefData
     {
-        public string Type { get; set; }
+        public int Type { get; set; }
         public uint Flags { get; set; }
         public float[] Colour { get; set; }
         public float Intensity { get; set; }
@@ -64,19 +64,7 @@ namespace LightConverter
                     LightDefData lightInfo = new LightDefData();
 
                     // Get light definition type
-                    int lightType = ((TagFieldEnum)tagFile.SelectField($"Block:generic light definitions[{i}]/ShortEnum:type")).Value;
-                    switch (lightType)
-                    {
-                        case 0:
-                            lightInfo.Type = "omni";
-                            break;
-                        case 1:
-                            lightInfo.Type = "spot";
-                            break;
-                        case 2:
-                            lightInfo.Type = "directional";
-                            break;
-                    }
+                    lightInfo.Type = ((TagFieldEnum)tagFile.SelectField($"Block:generic light definitions[{i}]/ShortEnum:type")).Value;
 
                     // Get light definition flags
                     lightInfo.Flags = ((TagFieldFlags)tagFile.SelectField($"Block:generic light definitions[{i}]/WordFlags:flags")).RawValue;
@@ -118,6 +106,10 @@ namespace LightConverter
                     lightInstData.Add(lightInstInfo);
                     Console.WriteLine($"Obtained light instance {j} info");
                 }
+            }
+            catch
+            {
+                Console.WriteLine("Unknown managedblam error");
             }
             finally
             {
