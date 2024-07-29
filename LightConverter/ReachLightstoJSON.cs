@@ -31,12 +31,91 @@ namespace LightConverter
         public List<LightInstData> LightInstances { get; set; }
     }
 
+    public class FilePathSanitiser
+    {
+        // Define the invalid path characters
+        private static readonly char[] InvalidPathChars = Path.GetInvalidPathChars();
+
+        public static string SanitiseFilePath(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                Console.WriteLine("Input file path cannot be null or whitespace.");
+                return "";
+            }
+
+            // Trim whitespace and quotes
+            string sanitisedPath = input.Trim().Trim('"');
+
+            // Check for invalid characters
+            if (sanitisedPath.IndexOfAny(InvalidPathChars) >= 0)
+            {
+                Console.WriteLine("Input file path contains invalid characters.");
+                return "";
+            }
+
+            // Get the absolute path to ensure it's well-formed
+            try
+            {
+                sanitisedPath = Path.GetFullPath(sanitisedPath);
+            }
+            catch
+            {
+                Console.WriteLine("Input file path is not valid.");
+                return "";
+            }
+
+            // Check file exists
+            if (!File.Exists(sanitisedPath))
+            {
+                Console.WriteLine("Input file does not exist.");
+                return "";
+            }
+
+            // Check file is in HREK
+            if (!sanitisedPath.Contains("HREK\\tags"))
+            {
+                Console.WriteLine("Input file is not in the HREK tags folder.");
+                return "";
+            }
+            
+            // Check correct tag type
+            if (Path.GetExtension(sanitisedPath) != ".scenario_structure_lighting_info")
+            {
+                Console.WriteLine("Input file is not a .scenario_structure_lighting_info tag.");
+                return "";
+            }
+
+            return sanitisedPath;
+        }
+    }
+
     internal class ReachLightstoJSON
     {
         static void Main(string[] args)
         {
+            string userTagPath;
+            while (true)
+            {
+                Console.WriteLine("Enter full path to Reach .scenario_structure_lighting_info tag:\n");
+                string userInput = Console.ReadLine();
+                userTagPath = FilePathSanitiser.SanitiseFilePath(userInput);
+                if (userTagPath != "")
+                {
+                    Console.WriteLine("Valid path entered");
+                    break;
+                }
+            }
+
+            // Get HREK path
+            int hrekIndex = userTagPath.IndexOf("HREK");
+            string hrek = userTagPath.Substring(0, hrekIndex + 4);
+
+            // Get relative tag path
+            string relativePath = Path.ChangeExtension(userTagPath.Substring(hrekIndex + 10), null);
+            
+
             // ManagedBlam Initialisation
-            string hrek = "I:\\SteamLibrary\\steamapps\\common\\HREK";
             void callback(ManagedBlamCrashInfo LambdaExpression) { }
             ManagedBlamStartupParameters startupParams = new ManagedBlamStartupParameters
             {
@@ -48,8 +127,7 @@ namespace LightConverter
             List<LightInstData> lightInstData = new List<LightInstData>();
 
             var tagFile = new TagFile();
-            var pathString = @"levels\dlc\cex_headlong\cex_headlong";
-            var tagPath = TagPath.FromPathAndExtension(pathString, "scenario_structure_lighting_info");
+            var tagPath = TagPath.FromPathAndExtension(relativePath, "scenario_structure_lighting_info");
             try
             {
                 tagFile.Load(tagPath);
@@ -129,15 +207,15 @@ namespace LightConverter
                     WriteIndented = true,
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                 };
-
                 string json = JsonSerializer.Serialize(lightDataContainer, options);
 
                 // Write JSON to file
-                string filePath = Path.Combine(hrek, $"{Path.GetFileName(pathString)}_lightdata.json");
+                string filePath = Path.Combine(AppContext.BaseDirectory, $"{Path.GetFileName(relativePath)}_lightdata.json");
                 File.WriteAllText(filePath, json);
 
                 Console.WriteLine($"JSON data written to {filePath}");
             }
+            Console.WriteLine("\nPress enter to exit");
             Console.ReadLine();
             ManagedBlamSystem.Stop();
         }
