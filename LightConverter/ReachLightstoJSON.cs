@@ -3,10 +3,12 @@ using Bungie.Tags;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.IO;
 
 namespace LightConverter
 {
-    class LightDefData
+    public class LightDefData
     {
         public string Type { get; set; }
         public uint Flags { get; set; }
@@ -15,12 +17,18 @@ namespace LightConverter
         public float[] AttenBounds { get; set; }
     }
 
-    class LightInstData
+    public class LightInstData
     {
         public long DefIndex { get; set; }
         public float[] Origin { get; set; }
         public float[] Forward { get; set; }
         public float[] Up { get; set; }
+    }
+
+    public class LightDataContainer
+    {
+        public List<LightDefData> LightDefinitions { get; set; }
+        public List<LightInstData> LightInstances { get; set; }
     }
 
     internal class ReachLightstoJSON
@@ -36,8 +44,12 @@ namespace LightConverter
             };
             ManagedBlamSystem.Start(hrek, callback, startupParams);
 
+            List<LightDefData> lightDefData = new List<LightDefData>();
+            List<LightInstData> lightInstData = new List<LightInstData>();
+
             var tagFile = new TagFile();
-            var tagPath = TagPath.FromPathAndExtension(@"levels\dlc\cex_headlong\cex_headlong", "scenario_structure_lighting_info");
+            var pathString = @"levels\dlc\cex_headlong\cex_headlong";
+            var tagPath = TagPath.FromPathAndExtension(pathString, "scenario_structure_lighting_info");
             try
             {
                 tagFile.Load(tagPath);
@@ -78,6 +90,7 @@ namespace LightConverter
                     // Get light definition falloff
                     lightInfo.AttenBounds = ((TagFieldElementArraySingle)tagFile.SelectField($"Block:generic light definitions[{i}]/Realbounds:far attenuation bounds")).Data;
 
+                    lightDefData.Add(lightInfo);
                     Console.WriteLine($"Obtained light definition {i} info");
                 }
 
@@ -102,6 +115,7 @@ namespace LightConverter
                     // Get light definition up
                     lightInstInfo.Up = ((TagFieldElementArraySingle)tagFile.SelectField($"Block:generic light instances[{j}]/RealVector3d:up")).Data;
 
+                    lightInstData.Add(lightInstInfo);
                     Console.WriteLine($"Obtained light instance {j} info");
                 }
             }
@@ -109,9 +123,31 @@ namespace LightConverter
             {
                 // Gracefully close tag file
                 tagFile.Dispose();
-                Console.WriteLine("Tagfile closed");
-                Console.ReadLine();
+                Console.WriteLine("\nTagfile closed\n\n");
+
+                var lightDataContainer = new LightDataContainer
+                {
+                    LightDefinitions = lightDefData,
+                    LightInstances = lightInstData
+                };
+
+                // Serialize to JSON
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                };
+
+                string json = JsonSerializer.Serialize(lightDataContainer, options);
+
+                // Write JSON to file
+                string filePath = Path.Combine(hrek, $"{Path.GetFileName(pathString)}_lightdata.json");
+                File.WriteAllText(filePath, json);
+
+                Console.WriteLine($"JSON data written to {filePath}");
             }
+            Console.ReadLine();
+            ManagedBlamSystem.Stop();
         }
     }
 }
