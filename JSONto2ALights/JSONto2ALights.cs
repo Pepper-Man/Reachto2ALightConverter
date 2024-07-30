@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Text.Json;
 using System.IO;
 using Corinth;
 using Corinth.Tags;
-using System.Xml.Linq;
 
 namespace JSONto2ALights
 {
@@ -34,11 +30,117 @@ namespace JSONto2ALights
         public List<LightInstData> LightInstances { get; set; }
     }
 
+    public class FilePathSanitiser
+    {
+        // Define the invalid path characters
+        private static readonly char[] InvalidPathChars = Path.GetInvalidPathChars();
+
+        public static string SanitisePath(string input, string type)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                Console.WriteLine("Input file path cannot be null or whitespace.");
+                return "";
+            }
+
+            // Trim whitespace and quotes
+            string sanitisedPath = input.Trim().Trim('"');
+
+            // Check for invalid characters
+            if (sanitisedPath.IndexOfAny(InvalidPathChars) >= 0)
+            {
+                Console.WriteLine("Input file path contains invalid characters.");
+                return "";
+            }
+
+            // Get the absolute path to ensure it's well-formed
+            try
+            {
+                sanitisedPath = Path.GetFullPath(sanitisedPath);
+            }
+            catch
+            {
+                Console.WriteLine("Input file path is not valid.");
+                return "";
+            }
+
+            // Check file exists
+            if (!File.Exists(sanitisedPath))
+            {
+                Console.WriteLine("Input file does not exist.");
+                return "";
+            }
+
+            // Check file is in H2AMPEK
+            if (type == "tag")
+            {
+                if (!sanitisedPath.Contains("H2AMPEK\\tags"))
+                {
+                    Console.WriteLine("Input file is not in the HREK tags folder.");
+                    return "";
+                }
+            }
+
+            // Check correct extension
+            if (type == "tag")
+            {
+                if (Path.GetExtension(sanitisedPath) != ".scenario_structure_lighting_info")
+                {
+                    Console.WriteLine("Input file is not a .scenario_structure_lighting_info tag.");
+                    return "";
+                }
+            }
+            else if (type == "json")
+            {
+                if (Path.GetExtension(sanitisedPath) != ".json")
+                {
+                    Console.WriteLine("Input file is not a .scenario_structure_lighting_info tag.");
+                    return "";
+                }
+            }
+            
+            return sanitisedPath;
+        }
+    }
+
     internal class JSONto2ALights
     {
         static void Main(string[] args)
         {
-            string jsonPath = "I:\\SteamLibrary\\steamapps\\common\\HREK\\cex_headlong_lightdata.json";
+            // Get H2AMP tag input from user
+            string userTagPath;
+            while (true)
+            {
+                Console.WriteLine("Enter full path to H2AMP .scenario_structure_lighting_info tag:\n");
+                string userInput = Console.ReadLine();
+                userTagPath = FilePathSanitiser.SanitisePath(userInput, "tag");
+                if (userTagPath != "")
+                {
+                    Console.WriteLine("Valid path entered");
+                    break;
+                }
+            }
+
+            // Get H2AMPEK path
+            int h2ampekIndex = userTagPath.IndexOf("H2AMPEK");
+            string h2ampek = userTagPath.Substring(0, h2ampekIndex + 7);
+
+            // Get relative tag path
+            string relativePath = Path.ChangeExtension(userTagPath.Substring(h2ampekIndex + 13), null);
+
+            // Get JSON path from user
+            string jsonPath;
+            while (true)
+            {
+                Console.WriteLine("Enter full path to .json file:\n");
+                string userInput = Console.ReadLine();
+                jsonPath = FilePathSanitiser.SanitisePath(userInput, "json");
+                if (jsonPath != "")
+                {
+                    Console.WriteLine("Valid path entered");
+                    break;
+                }
+            }
 
             // Read JSON from file
             string json = File.ReadAllText(jsonPath);
@@ -52,7 +154,6 @@ namespace JSONto2ALights
             LightDataContainer lightDataContainer = JsonSerializer.Deserialize<LightDataContainer>(json, options);
 
             // ManagedBlam Initialisation
-            string h2ampek = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\H2AMPEK";
             void callback(ManagedBlamCrashInfo LambdaExpression) { }
             ManagedBlamStartupParameters startupParams = new ManagedBlamStartupParameters
             {
@@ -60,8 +161,7 @@ namespace JSONto2ALights
             };
             ManagedBlamSystem.Start(h2ampek, callback, startupParams);
             var tagFile = new TagFile();
-            var pathString = @"levels\pepper\cex_headlong\cex_headlong_headlong";
-            var tagPath = TagPath.FromPathAndExtension(pathString, "scenario_structure_lighting_info");
+            var tagPath = TagPath.FromPathAndExtension(relativePath, "scenario_structure_lighting_info");
 
             try
             {
