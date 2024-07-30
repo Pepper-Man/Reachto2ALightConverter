@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\ILMerge.3.0.29\build\ILMerge.props" Condition="Exists('..\packages\ILMerge.3.0.29\build\ILMerge.props')" />
+  <Import Project="..\packages\ILRepack.2.0.34\build\ILRepack.props" Condition="Exists('..\packages\ILRepack.2.0.34\build\ILRepack.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -109,12 +109,11 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\ILMerge.3.0.29\build\ILMerge.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILMerge.3.0.29\build\ILMerge.props'))" />
+    <Error Condition="!Exists('..\packages\ILRepack.2.0.34\build\ILRepack.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILRepack.2.0.34\build\ILRepack.props'))" />
   </Target>
-
-  <Target Name="ILMerge" AfterTargets="AfterBuild">
-    <Exec Command="$(ILMergeConsolePath) $(OutputPath)JSONto2ALights.exe /out:$(OutputPath)JSONto2ALights_Merged.exe $(OutputPath)System.Text.Json.dll" />
-    <Delete Files="$(OutputPath)JSONto2ALights.exe" />
-    <Move SourceFiles="$(OutputPath)JSONto2ALights_Merged.exe" DestinationFiles="$(OutputPath)JSONto2ALights.exe" />
+  <Target Name="ILRepack" AfterTargets="Build">
+    <Exec Command="dotnet ..\packages\ILRepack.2.0.34\tools\ilrepack.exe $(OutputPath)JSONto2ALights.exe /out:$(OutputPath)JSONto2ALights_Merged.exe $(OutputPath)System.Text.Json.dll $(OutputPath)System.Threading.Tasks.Extensions.dll $(OutputPath)System.Text.Encodings.Web.dll $(OutputPath)Microsoft.Bcl.AsyncInterfaces.dll $(OutputPath)System.Memory.dll $(OutputPath)System.Runtime.CompilerServices.Unsafe.dll $(OutputPath)System.Buffers.dll $(OutputPath)System.ValueTuple.dll $(OutputPath)System.Numerics.Vectors.dll" Condition="!Exists('$(OutputPath)JSONto2ALights_Merged.exe')"  />
+    <Delete Files="$(OutputPath)JSONto2ALights.exe" Condition="Exists('$(OutputPath)JSONto2ALights_Merged.exe')" />
+    <Move SourceFiles="$(OutputPath)JSONto2ALights_Merged.exe" DestinationFiles="$(OutputPath)JSONto2ALights.exe" Condition="Exists('$(OutputPath)JSONto2ALights_Merged.exe')" />
   </Target>
 </Project>
